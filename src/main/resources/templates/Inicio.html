@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <title>Inicio - Oferta Educativa</title>
+</head>
+<body>
+<nav th:replace="Fragments/fragment1 :: menu"></nav>
+
+<div class="container mt-5">
+  <div class="text-center mb-5">
+    <h1 class="display-4">Bienvenido a la Oferta Educativa</h1>
+    <p class="lead text-muted">Explora los programas educativos disponibles o gestiona las ofertas desde la consola de administracion.</p>
+  </div>
+
+  <div class="row justify-content-center g-4">
+    <div class="col-md-5">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body text-center d-flex flex-column">
+          <h3 class="card-title">Ofertas Educativas</h3>
+          <p class="card-text text-muted flex-grow-1">Consulta las carreras y programas disponibles como estudiante. Explora modalidades, imagenes y detalles de cada oferta.</p>
+          <a href="/ofertas" class="btn btn-primary btn-lg mt-3">Ver Ofertas</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-5">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body text-center d-flex flex-column">
+          <h3 class="card-title">Gestion de Ofertas</h3>
+          <p class="card-text text-muted flex-grow-1">Administra las ofertas educativas: crea nuevas, edita las existentes o elimina las que ya no estan vigentes.</p>
+          <a href="/consola/gestion_ofertas" class="btn btn-outline-primary btn-lg mt-3">Ir a la Consola</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

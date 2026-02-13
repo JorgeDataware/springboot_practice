@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <title th:text="${oferta != null} ? 'Editar Oferta Educativa' : 'Nueva Oferta Educativa'">Nueva Oferta Educativa</title>
+
+  <style>
+    .form-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .preview-img {
+      max-width: 100%;
+      height: 200px;
+      object-fit: contain;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+<nav th:replace="Fragments/fragment1 :: menu"></nav>
+
+<nav aria-label="breadcrumb">
+  <div class="m-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+      <li class="breadcrumb-item"><a href="/consola/gestion_ofertas">Gestion de Ofertas</a></li>
+      <li class="breadcrumb-item active" aria-current="page" th:text="${oferta != null} ? 'Editar Oferta' : 'Nueva Oferta'">Nueva Oferta</li>
+    </ol>
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <div class="form-container">
+    <h1 class="mb-4" th:text="${oferta != null} ? 'Editar Oferta Educativa' : 'Agregar Nueva Oferta Educativa'">Agregar Nueva Oferta Educativa</h1>
+
+    <!-- Mensaje de éxito (si existe) -->
+    <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+      <strong>¡Éxito!</strong> <span th:text="${mensaje}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Mensaje de error (si existe) -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <strong>Error:</strong> <span th:text="${error}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <form th:action="@{/ofertas/guardar}" method="post" id="formOferta">
+
+          <!-- ID oculto (solo si estamos editando) -->
+          <input type="hidden" name="id" th:if="${oferta != null}" th:value="${oferta.id}">
+
+          <!-- Nombre -->
+          <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre de la Oferta Educativa <span class="text-danger">*</span></label>
+            <input type="text"
+                   class="form-control"
+                   id="nombre"
+                   name="nombre"
+                   th:value="${oferta != null} ? ${oferta.nombre} : ''"
+                   placeholder="Ej: Ingeniería en Sistemas Computacionales"
+                   required
+                   maxlength="255">
+            <div class="form-text">Ingrese el nombre completo de la carrera o programa.</div>
+          </div>
+
+          <!-- Modalidad -->
+          <div class="mb-3">
+            <label for="modalidad" class="form-label">Modalidad <span class="text-danger">*</span></label>
+            <select class="form-select" id="modalidad" name="modalidad" required>
+              <option value="">Seleccione una modalidad...</option>
+              <option value="Modalidad intensiva y mixta" 
+                      th:selected="${oferta != null and oferta.modalidad == 'Modalidad intensiva y mixta'}">
+                Modalidad intensiva y mixta
+              </option>
+              <option value="Modalidad vespertina y mixta" 
+                      th:selected="${oferta != null and oferta.modalidad == 'Modalidad vespertina y mixta'}">
+                Modalidad vespertina y mixta
+              </option>
+              <option value="Modalidad presencial" 
+                      th:selected="${oferta != null and oferta.modalidad == 'Modalidad presencial'}">
+                Modalidad presencial
+              </option>
+              <option value="Modalidad en línea" 
+                      th:selected="${oferta != null and oferta.modalidad == 'Modalidad en línea'}">
+                Modalidad en línea
+              </option>
+              <option value="Modalidad híbrida" 
+                      th:selected="${oferta != null and oferta.modalidad == 'Modalidad híbrida'}">
+                Modalidad híbrida
+              </option>
+            </select>
+            <div class="form-text">Seleccione la modalidad del programa educativo.</div>
+          </div>
+
+          <!-- Division -->
+          <div class="mb-3">
+            <label for="divisionId" class="form-label">Division</label>
+            <select class="form-select" id="divisionId" name="divisionId">
+              <option value="">Seleccione una division...</option>
+              <option th:each="division : ${divisiones}"
+                      th:value="${division.id}"
+                      th:text="${division.name}"
+                      th:selected="${oferta != null and oferta.division != null and oferta.division.id == division.id}">
+              </option>
+            </select>
+            <div class="form-text">Seleccione la division a la que pertenece esta oferta educativa (opcional).</div>
+          </div>
+
+          <!-- URL de la Imagen -->
+          <div class="mb-3">
+            <label for="imageUrl" class="form-label">URL de la Imagen</label>
+            <input type="url"
+                   class="form-control"
+                   id="imageUrl"
+                   name="imageUrl"
+                   th:value="${oferta != null} ? ${oferta.imageUrl} : ''"
+                   placeholder="https://ejemplo.com/imagen.png"
+                   maxlength="500">
+            <div class="form-text">Ingrese la URL de la imagen representativa del programa.</div>
+          </div>
+
+          <!-- Vista previa de la imagen -->
+          <div class="mb-3" id="previewContainer" 
+               th:style="${oferta != null and oferta.imageUrl != null and oferta.imageUrl != ''} ? 'display: block;' : 'display: none;'">
+            <label class="form-label">Vista Previa:</label>
+            <div>
+              <img id="imagePreview" class="preview-img" 
+                   th:src="${oferta != null and oferta.imageUrl != null} ? ${oferta.imageUrl} : ''" 
+                   alt="Vista previa de la imagen">
+            </div>
+          </div>
+
+          <!-- Botones -->
+          <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <a href="/consola/gestion_ofertas" class="btn btn-secondary">
+              Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary" 
+                    th:text="${oferta != null} ? 'Guardar Cambios' : 'Guardar Oferta'">
+              Guardar Oferta
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="alert alert-info mt-4" role="alert">
+      <h6 class="alert-heading">Información:</h6>
+      <ul class="mb-0">
+        <li>Los campos marcados con <span class="text-danger">*</span> son obligatorios.</li>
+        <li>La imagen se mostrará en la página de ofertas educativas.</li>
+        <li>Puede usar cualquier URL de imagen pública.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Vista previa de la imagen cuando se ingresa una URL
+  document.getElementById('imageUrl').addEventListener('input', function() {
+    const url = this.value;
+    const preview = document.getElementById('imagePreview');
+    const container = document.getElementById('previewContainer');
+
+    if (url) {
+      preview.src = url;
+      container.style.display = 'block';
+
+      // Ocultar si la imagen no carga
+      preview.onerror = function() {
+        container.style.display = 'none';
+      };
+    } else {
+      container.style.display = 'none';
+    }
+  });
+
+  // Validación del formulario
+  document.getElementById('formOferta').addEventListener('submit', function(e) {
+    const nombre = document.getElementById('nombre').value.trim();
+    const modalidad = document.getElementById('modalidad').value;
+
+    if (!nombre) {
+      e.preventDefault();
+      alert('Por favor, ingrese el nombre de la oferta educativa.');
+      return false;
+    }
+
+    if (!modalidad) {
+      e.preventDefault();
+      alert('Por favor, seleccione una modalidad.');
+      return false;
+    }
+  });
+</script>
+</body>
+</html>
