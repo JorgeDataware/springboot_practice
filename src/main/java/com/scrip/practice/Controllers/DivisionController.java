@@ -12,8 +12,26 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Optional;
 
+/**
+ * Spring MVC controller for Division CRUD operations.
+ * 
+ * <p>Handles the admin management page for divisions. All form submissions
+ * use the POST-Redirect-GET (PRG) pattern with flash attributes for
+ * success/error messaging. The create and update operations share the
+ * same endpoint ({@code POST /divisiones/guardar}), distinguished by
+ * the presence of the {@code id} parameter.</p>
+ * 
+ * <h3>Routes:</h3>
+ * <ul>
+ *   <li>{@code GET /consola/gestion_divisiones} - Management page with table + modal</li>
+ *   <li>{@code POST /divisiones/guardar} - Create or update a division</li>
+ *   <li>{@code POST /divisiones/eliminar/{id}} - Delete a division</li>
+ * </ul>
+ * 
+ * @see Division
+ * @see DivisionService
+ */
 @Controller
 public class DivisionController {
     
@@ -21,8 +39,13 @@ public class DivisionController {
     private DivisionService divisionService;
 
     /**
-     * GET /consola/gestion_divisiones
-     * Pantalla de gestion de divisiones con tabla
+     * Displays the division management page with a table of all divisions.
+     * 
+     * <p>The page includes an inline Bootstrap modal for creating/editing
+     * divisions (see {@code GestionDivisiones.html}).</p>
+     * 
+     * @param model Spring MVC model — receives {@code divisiones} (List of Division)
+     * @return the "GestionDivisiones" Thymeleaf template
      */
     @GetMapping("/consola/gestion_divisiones")
     public String gestionDivisiones(Model model) {
@@ -32,33 +55,18 @@ public class DivisionController {
     }
 
     /**
-     * GET /divisiones/nueva
-     * Muestra el formulario para crear una nueva division (sin ID)
-     */
-    @GetMapping("/divisiones/nueva")
-    public String mostrarFormularioNuevaDivision(Model model) {
-        return "NuevaDivision";
-    }
-
-    /**
-     * GET /divisiones/nueva/{id}
-     * Muestra el formulario para editar una division existente
-     */
-    @GetMapping("/divisiones/nueva/{id}")
-    public String mostrarFormularioEditarDivision(@PathVariable Integer id, Model model) {
-        Optional<Division> divisionOpt = divisionService.obtenerPorId(id);
-        
-        if (divisionOpt.isPresent()) {
-            model.addAttribute("division", divisionOpt.get());
-            return "NuevaDivision";
-        } else {
-            throw new RuntimeException("No se encontro la division con ID: " + id);
-        }
-    }
-
-    /**
-     * POST /divisiones/guardar
-     * Procesa el formulario y guarda o actualiza la division
+     * Creates or updates a division based on form data from the modal.
+     * 
+     * <p>If {@code id} is present, performs an update; otherwise creates a new
+     * division. Uses PRG pattern — always redirects back to the management page
+     * with a flash attribute containing the result message.</p>
+     * 
+     * @param id                 the division ID (null for new divisions)
+     * @param cve                the division code/key
+     * @param name               the division name
+     * @param active             whether the division is active (defaults to false)
+     * @param redirectAttributes used to pass flash messages across the redirect
+     * @return redirect to {@code /consola/gestion_divisiones}
      */
     @PostMapping("/divisiones/guardar")
     public String guardarDivision(
@@ -94,18 +102,19 @@ public class DivisionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", 
                 "Ocurrio un error al guardar la division: " + e.getMessage());
-            
-            if (id != null) {
-                return "redirect:/divisiones/nueva/" + id;
-            } else {
-                return "redirect:/divisiones/nueva";
-            }
+            return "redirect:/consola/gestion_divisiones";
         }
     }
 
     /**
-     * POST /divisiones/eliminar/{id}
-     * Elimina una division
+     * Deletes a division by its ID.
+     * 
+     * <p><strong>Warning:</strong> Due to cascade settings on the Division entity,
+     * deleting a division will also delete all its associated educational offerings.</p>
+     * 
+     * @param id                 the ID of the division to delete
+     * @param redirectAttributes used to pass flash messages across the redirect
+     * @return redirect to {@code /consola/gestion_divisiones}
      */
     @PostMapping("/divisiones/eliminar/{id}")
     public String eliminarDivision(@PathVariable Integer id, RedirectAttributes redirectAttributes) {

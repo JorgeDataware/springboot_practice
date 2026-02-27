@@ -8,6 +8,17 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service layer for {@link Division} CRUD operations.
+ * 
+ * <p>Delegates persistence to {@link DivisionRepository}. The update method uses
+ * a find-then-set-then-save pattern to ensure only the allowed fields are modified.
+ * Throws {@link RuntimeException} when a division is not found during update/delete.</p>
+ * 
+ * @see Division
+ * @see DivisionRepository
+ * @see com.scrip.practice.Controllers.DivisionController
+ */
 @Service
 public class DivisionService {
 
@@ -15,28 +26,45 @@ public class DivisionService {
     private DivisionRepository divisionRepository;
 
     /**
-     * Obtiene todas las divisiones
+     * Retrieves all divisions from the database.
+     * 
+     * @return list of all divisions
      */
     public List<Division> obtenerTodas() {
         return divisionRepository.findAll();
     }
 
     /**
-     * Obtiene una division por ID
+     * Finds a single division by its integer ID.
+     * 
+     * @param id the division's primary key
+     * @return an Optional containing the division if found
      */
     public Optional<Division> obtenerPorId(Integer id) {
         return divisionRepository.findById(id);
     }
 
     /**
-     * Crea una nueva division
+     * Persists a new division to the database.
+     * 
+     * @param division the division entity to create
+     * @return the saved division (with generated ID)
      */
     public Division crear(Division division) {
         return divisionRepository.save(division);
     }
 
     /**
-     * Actualiza una division existente
+     * Updates an existing division's cve, name, and active fields.
+     * 
+     * <p>Finds the existing entity by ID, applies field changes, then saves.
+     * This pattern ensures the entity's relationships (e.g. OfertasEducativas)
+     * are preserved during update.</p>
+     * 
+     * @param id                  the ID of the division to update
+     * @param divisionActualizada entity containing the new field values
+     * @return the updated division
+     * @throws RuntimeException if no division exists with the given ID
      */
     public Division actualizar(Integer id, Division divisionActualizada) {
         return divisionRepository.findById(id)
@@ -50,7 +78,14 @@ public class DivisionService {
     }
 
     /**
-     * Elimina una division
+     * Deletes a division by ID. Checks existence first and throws if not found.
+     * 
+     * <p><strong>Warning:</strong> Due to {@code CascadeType.ALL} + orphan removal on
+     * the Division entity, deleting a division will also delete all its associated
+     * educational offerings.</p>
+     * 
+     * @param id the ID of the division to delete
+     * @throws RuntimeException if no division exists with the given ID
      */
     public void eliminar(Integer id) {
         if (!divisionRepository.existsById(id)) {
@@ -60,14 +95,19 @@ public class DivisionService {
     }
 
     /**
-     * Cuenta todas las divisiones
+     * Returns the total count of divisions in the database.
+     * 
+     * @return total number of divisions
      */
     public long contarTodas() {
         return divisionRepository.count();
     }
 
     /**
-     * Verifica si existe una division
+     * Checks whether a division with the given ID exists.
+     * 
+     * @param id the ID to check
+     * @return true if a division with that ID exists
      */
     public boolean existe(Integer id) {
         return divisionRepository.existsById(id);

@@ -31,13 +31,13 @@
 <div class="container mt-3">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Gestion de Ofertas Educativas</h1>
-    <a href="/ofertas/nueva" class="btn btn-primary">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalOferta" onclick="abrirModalNueva()">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle me-1" viewBox="0 0 16 16">
         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
         <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
       </svg>
       Nueva Oferta
-    </a>
+    </button>
   </div>
 
   <!-- Mensaje de exito -->
@@ -84,12 +84,19 @@
                 <span th:if="${oferta.division == null}" class="text-muted">Sin asignar</span>
               </td>
               <td class="text-center">
-                <a th:href="@{/ofertas/nueva/{id}(id=${oferta.id})}" class="btn btn-sm btn-warning me-1" title="Editar">
+                <button type="button" class="btn btn-sm btn-warning me-1" title="Editar"
+                        data-bs-toggle="modal" data-bs-target="#modalOferta"
+                        th:data-id="${oferta.id}"
+                        th:data-nombre="${oferta.nombre}"
+                        th:data-modalidad="${oferta.modalidad}"
+                        th:data-imageurl="${oferta.imageUrl}"
+                        th:data-divisionid="${oferta.division != null ? oferta.division.id : ''}"
+                        onclick="abrirModalEditar(this)">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
                     <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
                   </svg>
                   Editar
-                </a>
+                </button>
                 <form th:action="@{/ofertas/eliminar/{id}(id=${oferta.id})}" method="post" class="d-inline"
                       onsubmit="return confirm('¿Estas seguro de que deseas eliminar esta oferta?');">
                   <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
@@ -108,6 +115,160 @@
     </div>
   </div>
 </div>
+
+<!-- Modal para Crear/Editar Oferta Educativa -->
+<div class="modal fade" id="modalOferta" tabindex="-1" aria-labelledby="modalOfertaLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalOfertaLabel">Nueva Oferta Educativa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form th:action="@{/ofertas/guardar}" method="post" id="formOferta">
+        <div class="modal-body">
+          <!-- ID oculto (solo para editar) -->
+          <input type="hidden" name="id" id="ofertaId">
+
+          <!-- Nombre -->
+          <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre de la Oferta Educativa <span class="text-danger">*</span></label>
+            <input type="text"
+                   class="form-control"
+                   id="nombre"
+                   name="nombre"
+                   placeholder="Ej: Ingeniería en Sistemas Computacionales"
+                   required
+                   maxlength="255">
+            <div class="form-text">Ingrese el nombre completo de la carrera o programa.</div>
+          </div>
+
+          <!-- Modalidad -->
+          <div class="mb-3">
+            <label for="modalidad" class="form-label">Modalidad <span class="text-danger">*</span></label>
+            <select class="form-select" id="modalidad" name="modalidad" required>
+              <option value="">Seleccione una modalidad...</option>
+              <option value="Modalidad intensiva y mixta">Modalidad intensiva y mixta</option>
+              <option value="Modalidad vespertina y mixta">Modalidad vespertina y mixta</option>
+              <option value="Modalidad presencial">Modalidad presencial</option>
+              <option value="Modalidad en línea">Modalidad en línea</option>
+              <option value="Modalidad híbrida">Modalidad híbrida</option>
+            </select>
+            <div class="form-text">Seleccione la modalidad del programa educativo.</div>
+          </div>
+
+          <!-- Division -->
+          <div class="mb-3">
+            <label for="divisionId" class="form-label">Division</label>
+            <select class="form-select" id="divisionId" name="divisionId">
+              <option value="">Seleccione una division...</option>
+              <option th:each="division : ${divisiones}"
+                      th:value="${division.id}"
+                      th:text="${division.name}">
+              </option>
+            </select>
+            <div class="form-text">Seleccione la division a la que pertenece esta oferta educativa (opcional).</div>
+          </div>
+
+          <!-- URL de la Imagen -->
+          <div class="mb-3">
+            <label for="imageUrl" class="form-label">URL de la Imagen</label>
+            <input type="url"
+                   class="form-control"
+                   id="imageUrl"
+                   name="imageUrl"
+                   placeholder="https://ejemplo.com/imagen.png"
+                   maxlength="500">
+            <div class="form-text">Ingrese la URL de la imagen representativa del programa.</div>
+          </div>
+
+          <!-- Vista previa de la imagen -->
+          <div class="mb-3" id="previewContainer" style="display: none;">
+            <label class="form-label">Vista Previa:</label>
+            <div>
+              <img id="imagePreview" style="max-width: 100%; height: 200px; object-fit: contain; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px;" alt="Vista previa de la imagen">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btnGuardar">Guardar Oferta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function abrirModalNueva() {
+    document.getElementById('modalOfertaLabel').textContent = 'Nueva Oferta Educativa';
+    document.getElementById('btnGuardar').textContent = 'Guardar Oferta';
+    document.getElementById('ofertaId').value = '';
+    document.getElementById('ofertaId').disabled = true;
+    document.getElementById('nombre').value = '';
+    document.getElementById('modalidad').value = '';
+    document.getElementById('divisionId').value = '';
+    document.getElementById('imageUrl').value = '';
+    document.getElementById('previewContainer').style.display = 'none';
+  }
+
+  function abrirModalEditar(btn) {
+    document.getElementById('modalOfertaLabel').textContent = 'Editar Oferta Educativa';
+    document.getElementById('btnGuardar').textContent = 'Guardar Cambios';
+    document.getElementById('ofertaId').value = btn.getAttribute('data-id');
+    document.getElementById('ofertaId').disabled = false;
+    document.getElementById('nombre').value = btn.getAttribute('data-nombre');
+    document.getElementById('modalidad').value = btn.getAttribute('data-modalidad') || '';
+    document.getElementById('divisionId').value = btn.getAttribute('data-divisionid') || '';
+
+    var imageUrl = btn.getAttribute('data-imageurl') || '';
+    document.getElementById('imageUrl').value = imageUrl;
+
+    var preview = document.getElementById('imagePreview');
+    var container = document.getElementById('previewContainer');
+    if (imageUrl) {
+      preview.src = imageUrl;
+      container.style.display = 'block';
+    } else {
+      container.style.display = 'none';
+    }
+  }
+
+  // Vista previa de la imagen cuando se ingresa una URL
+  document.getElementById('imageUrl').addEventListener('input', function() {
+    var url = this.value;
+    var preview = document.getElementById('imagePreview');
+    var container = document.getElementById('previewContainer');
+
+    if (url) {
+      preview.src = url;
+      container.style.display = 'block';
+
+      preview.onerror = function() {
+        container.style.display = 'none';
+      };
+    } else {
+      container.style.display = 'none';
+    }
+  });
+
+  // Validacion del formulario
+  document.getElementById('formOferta').addEventListener('submit', function(e) {
+    var nombre = document.getElementById('nombre').value.trim();
+    var modalidad = document.getElementById('modalidad').value;
+
+    if (!nombre) {
+      e.preventDefault();
+      alert('Por favor, ingrese el nombre de la oferta educativa.');
+      return false;
+    }
+
+    if (!modalidad) {
+      e.preventDefault();
+      alert('Por favor, seleccione una modalidad.');
+      return false;
+    }
+  });
+</script>
 
 </body>
 </html>
