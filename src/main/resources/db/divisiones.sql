@@ -7,3 +7,5 @@ INSERT INTO division (cve, name, active) VALUES
 SELECT * FROM division;
 
 DELETE FROM division;
+
+

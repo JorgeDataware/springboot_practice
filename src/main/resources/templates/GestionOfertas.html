@@ -40,13 +40,16 @@
     </button>
   </div>
 
-  <!-- Mensaje de exito -->
+  <!-- Contenedor de alertas (dinámico) -->
+  <div id="alertContainer"></div>
+
+  <!-- Mensaje de exito (initial server-side, si aplica) -->
   <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
     <span th:text="${mensaje}"></span>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
 
-  <!-- Mensaje de error -->
+  <!-- Mensaje de error (initial server-side, si aplica) -->
   <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
     <span th:text="${error}"></span>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -65,21 +68,21 @@
               <th class="text-center">Acciones</th>
             </tr>
           </thead>
-          <tbody>
-            <tr th:if="${#lists.isEmpty(ofertas)}">
+          <tbody id="tablaOfertas">
+            <tr th:if="${#lists.isEmpty(ofertas)}" id="filaVacia">
               <td colspan="5" class="text-center text-muted py-4">No hay ofertas educativas registradas.</td>
             </tr>
-            <tr th:each="oferta : ${ofertas}">
-              <td>
+            <tr th:each="oferta : ${ofertas}" th:id="'fila-' + ${oferta.id}">
+              <td class="col-imagen">
                 <img th:if="${oferta.imageUrl != null and !oferta.imageUrl.isEmpty()}"
                      th:src="${oferta.imageUrl}"
                      th:alt="${oferta.nombre}"
                      class="img-thumbnail-sm rounded">
                 <span th:if="${oferta.imageUrl == null or oferta.imageUrl.isEmpty()}" class="text-muted">Sin imagen</span>
               </td>
-              <td th:text="${oferta.nombre}"></td>
-              <td th:text="${oferta.modalidad}"></td>
-              <td>
+              <td th:text="${oferta.nombre}" class="col-nombre"></td>
+              <td th:text="${oferta.modalidad}" class="col-modalidad"></td>
+              <td class="col-division">
                 <span th:if="${oferta.division != null}" th:text="${oferta.division.name}"></span>
                 <span th:if="${oferta.division == null}" class="text-muted">Sin asignar</span>
               </td>
@@ -97,16 +100,15 @@
                   </svg>
                   Editar
                 </button>
-                <form th:action="@{/ofertas/eliminar/{id}(id=${oferta.id})}" method="post" class="d-inline"
-                      onsubmit="return confirm('¿Estas seguro de que deseas eliminar esta oferta?');">
-                  <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                    </svg>
-                    Eliminar
-                  </button>
-                </form>
+                <button type="button" class="btn btn-sm btn-danger" title="Eliminar"
+                        th:data-id="${oferta.id}"
+                        onclick="eliminarOferta(this)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                  </svg>
+                  Eliminar
+                </button>
               </td>
             </tr>
           </tbody>
@@ -124,7 +126,7 @@
         <h5 class="modal-title" id="modalOfertaLabel">Nueva Oferta Educativa</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form th:action="@{/ofertas/guardar}" method="post" id="formOferta">
+      <form id="formOferta">
         <div class="modal-body">
           <!-- ID oculto (solo para editar) -->
           <input type="hidden" name="id" id="ofertaId">
@@ -199,6 +201,142 @@
 </div>
 
 <script>
+  // ==================== Utilidades ====================
+
+  /** Muestra una alerta Bootstrap en el contenedor de alertas */
+  function mostrarAlerta(mensaje, tipo) {
+    var container = document.getElementById('alertContainer');
+    var alerta = document.createElement('div');
+    alerta.className = 'alert alert-' + tipo + ' alert-dismissible fade show';
+    alerta.setAttribute('role', 'alert');
+    alerta.innerHTML = '<span>' + mensaje + '</span>' +
+      '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+    container.innerHTML = '';
+    container.appendChild(alerta);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(function() {
+      var bsAlert = bootstrap.Alert.getOrCreateInstance(alerta);
+      if (bsAlert) bsAlert.close();
+    }, 5000);
+  }
+
+  /** Elimina la fila "No hay ofertas" si existe */
+  function eliminarFilaVacia() {
+    var filaVacia = document.getElementById('filaVacia');
+    if (filaVacia) filaVacia.remove();
+  }
+
+  /** Muestra la fila "No hay ofertas" si la tabla queda vacia */
+  function verificarTablaVacia() {
+    var tbody = document.getElementById('tablaOfertas');
+    if (tbody.children.length === 0) {
+      var tr = document.createElement('tr');
+      tr.id = 'filaVacia';
+      tr.innerHTML = '<td colspan="5" class="text-center text-muted py-4">No hay ofertas educativas registradas.</td>';
+      tbody.appendChild(tr);
+    }
+  }
+
+  /** Obtiene el nombre de la division del dropdown por su ID */
+  function getNombreDivision(divisionId) {
+    if (!divisionId) return null;
+    var select = document.getElementById('divisionId');
+    for (var i = 0; i < select.options.length; i++) {
+      if (select.options[i].value === String(divisionId)) {
+        return select.options[i].textContent;
+      }
+    }
+    return null;
+  }
+
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(text || ''));
+    return div.innerHTML;
+  }
+
+  function escapeAttr(text) {
+    return (text || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  /** Genera el HTML de la celda de imagen */
+  function generarCeldaImagen(imageUrl, nombre) {
+    if (imageUrl) {
+      return '<img src="' + escapeAttr(imageUrl) + '" alt="' + escapeAttr(nombre) + '" class="img-thumbnail-sm rounded">';
+    }
+    return '<span class="text-muted">Sin imagen</span>';
+  }
+
+  /** Genera el HTML de la celda de division */
+  function generarCeldaDivision(division) {
+    if (division && division.name) {
+      return '<span>' + escapeHtml(division.name) + '</span>';
+    }
+    return '<span class="text-muted">Sin asignar</span>';
+  }
+
+  /** Crea el HTML de una fila de la tabla para una oferta */
+  function crearFilaOferta(oferta) {
+    var tr = document.createElement('tr');
+    tr.id = 'fila-' + oferta.id;
+
+    var divisionId = oferta.division ? oferta.division.id : '';
+    var divisionName = oferta.division ? oferta.division.name : '';
+
+    tr.innerHTML =
+      '<td class="col-imagen">' + generarCeldaImagen(oferta.imageUrl, oferta.nombre) + '</td>' +
+      '<td class="col-nombre">' + escapeHtml(oferta.nombre) + '</td>' +
+      '<td class="col-modalidad">' + escapeHtml(oferta.modalidad) + '</td>' +
+      '<td class="col-division">' + generarCeldaDivision(oferta.division) + '</td>' +
+      '<td class="text-center">' +
+        '<button type="button" class="btn btn-sm btn-warning me-1" title="Editar"' +
+        ' data-bs-toggle="modal" data-bs-target="#modalOferta"' +
+        ' data-id="' + oferta.id + '"' +
+        ' data-nombre="' + escapeAttr(oferta.nombre) + '"' +
+        ' data-modalidad="' + escapeAttr(oferta.modalidad) + '"' +
+        ' data-imageurl="' + escapeAttr(oferta.imageUrl || '') + '"' +
+        ' data-divisionid="' + divisionId + '"' +
+        ' onclick="abrirModalEditar(this)">' +
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">' +
+            '<path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>' +
+          '</svg> Editar' +
+        '</button>' +
+        '<button type="button" class="btn btn-sm btn-danger" title="Eliminar"' +
+        ' data-id="' + oferta.id + '"' +
+        ' onclick="eliminarOferta(this)">' +
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">' +
+            '<path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>' +
+            '<path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>' +
+          '</svg> Eliminar' +
+        '</button>' +
+      '</td>';
+    return tr;
+  }
+
+  /** Actualiza una fila existente con los datos nuevos de la oferta */
+  function actualizarFilaOferta(fila, oferta) {
+    fila.querySelector('.col-imagen').innerHTML = generarCeldaImagen(oferta.imageUrl, oferta.nombre);
+    fila.querySelector('.col-nombre').textContent = oferta.nombre;
+    fila.querySelector('.col-modalidad').textContent = oferta.modalidad;
+    fila.querySelector('.col-division').innerHTML = generarCeldaDivision(oferta.division);
+
+    // Update data attributes on the edit button
+    var btnEditar = fila.querySelector('.btn-warning');
+    var divisionId = oferta.division ? oferta.division.id : '';
+    btnEditar.setAttribute('data-id', oferta.id);
+    btnEditar.setAttribute('data-nombre', oferta.nombre);
+    btnEditar.setAttribute('data-modalidad', oferta.modalidad);
+    btnEditar.setAttribute('data-imageurl', oferta.imageUrl || '');
+    btnEditar.setAttribute('data-divisionid', divisionId);
+
+    // Update data attribute on the delete button
+    var btnEliminar = fila.querySelector('.btn-danger');
+    btnEliminar.setAttribute('data-id', oferta.id);
+  }
+
+  // ==================== Modal ====================
+
   function abrirModalNueva() {
     document.getElementById('modalOfertaLabel').textContent = 'Nueva Oferta Educativa';
     document.getElementById('btnGuardar').textContent = 'Guardar Oferta';
@@ -251,23 +389,115 @@
     }
   });
 
-  // Validacion del formulario
+  // ==================== CRUD via fetch ====================
+
+  /** Guardar (crear o actualizar) oferta via AJAX */
   document.getElementById('formOferta').addEventListener('submit', function(e) {
+    e.preventDefault();
+
     var nombre = document.getElementById('nombre').value.trim();
     var modalidad = document.getElementById('modalidad').value;
+    var divisionIdVal = document.getElementById('divisionId').value;
+    var imageUrl = document.getElementById('imageUrl').value.trim();
+    var idField = document.getElementById('ofertaId');
+    var isEdit = !idField.disabled && idField.value !== '';
 
+    // Validacion
     if (!nombre) {
-      e.preventDefault();
       alert('Por favor, ingrese el nombre de la oferta educativa.');
-      return false;
+      return;
+    }
+    if (!modalidad) {
+      alert('Por favor, seleccione una modalidad.');
+      return;
     }
 
-    if (!modalidad) {
-      e.preventDefault();
-      alert('Por favor, seleccione una modalidad.');
-      return false;
+    var datos = {
+      nombre: nombre,
+      modalidad: modalidad,
+      imageUrl: imageUrl || null,
+      divisionId: divisionIdVal || null
+    };
+
+    var url, method;
+    if (isEdit) {
+      url = '/api/ofertas/' + idField.value;
+      method = 'PUT';
+    } else {
+      url = '/api/ofertas';
+      method = 'POST';
     }
+
+    // Disable submit button while processing
+    var btnGuardar = document.getElementById('btnGuardar');
+    btnGuardar.disabled = true;
+    btnGuardar.textContent = 'Guardando...';
+
+    fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
+    })
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+      if (data.success) {
+        var oferta = data.oferta;
+
+        if (isEdit) {
+          // Update existing row in the DOM
+          var fila = document.getElementById('fila-' + idField.value);
+          if (fila) {
+            actualizarFilaOferta(fila, oferta);
+          }
+        } else {
+          // Add new row to the table
+          eliminarFilaVacia();
+          var tbody = document.getElementById('tablaOfertas');
+          tbody.appendChild(crearFilaOferta(oferta));
+        }
+
+        // Close modal
+        var modal = bootstrap.Modal.getInstance(document.getElementById('modalOferta'));
+        if (modal) modal.hide();
+
+        mostrarAlerta(data.mensaje, 'success');
+      } else {
+        mostrarAlerta(data.error, 'danger');
+      }
+    })
+    .catch(function(err) {
+      mostrarAlerta('Error de conexion: ' + err.message, 'danger');
+    })
+    .finally(function() {
+      btnGuardar.disabled = false;
+      btnGuardar.textContent = isEdit ? 'Guardar Cambios' : 'Guardar Oferta';
+    });
   });
+
+  /** Eliminar oferta via AJAX */
+  function eliminarOferta(btn) {
+    var id = btn.getAttribute('data-id');
+    if (!confirm('¿Estas seguro de que deseas eliminar esta oferta?')) {
+      return;
+    }
+
+    fetch('/api/ofertas/' + id, { method: 'DELETE' })
+      .then(function(resp) { return resp.json(); })
+      .then(function(data) {
+        if (data.success) {
+          // Remove row from DOM
+          var fila = document.getElementById('fila-' + id);
+          if (fila) fila.remove();
+          verificarTablaVacia();
+          mostrarAlerta(data.mensaje, 'success');
+        } else {
+          mostrarAlerta(data.error, 'danger');
+        }
+      })
+      .catch(function(err) {
+        mostrarAlerta('Error de conexion: ' + err.message, 'danger');
+      });
+  }
 </script>
 
 </body>

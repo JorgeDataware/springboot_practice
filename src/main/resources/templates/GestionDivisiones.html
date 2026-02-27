@@ -31,13 +31,16 @@
     </button>
   </div>
 
-  <!-- Mensaje de exito -->
+  <!-- Contenedor de alertas (dinámico) -->
+  <div id="alertContainer"></div>
+
+  <!-- Mensaje de exito (initial server-side, si aplica) -->
   <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
     <span th:text="${mensaje}"></span>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
 
-  <!-- Mensaje de error -->
+  <!-- Mensaje de error (initial server-side, si aplica) -->
   <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
     <span th:text="${error}"></span>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -56,15 +59,15 @@
               <th class="text-center">Acciones</th>
             </tr>
           </thead>
-          <tbody>
-            <tr th:if="${#lists.isEmpty(divisiones)}">
+          <tbody id="tablaDivisiones">
+            <tr th:if="${#lists.isEmpty(divisiones)}" id="filaVacia">
               <td colspan="5" class="text-center text-muted py-4">No hay divisiones registradas.</td>
             </tr>
-            <tr th:each="division : ${divisiones}">
-              <td th:text="${division.id}"></td>
-              <td th:text="${division.cve}"></td>
-              <td th:text="${division.name}"></td>
-              <td>
+            <tr th:each="division : ${divisiones}" th:id="'fila-' + ${division.id}">
+              <td th:text="${division.id}" class="col-id"></td>
+              <td th:text="${division.cve}" class="col-cve"></td>
+              <td th:text="${division.name}" class="col-name"></td>
+              <td class="col-estado">
                 <span th:if="${division.active}" class="badge bg-success">Activa</span>
                 <span th:if="${!division.active}" class="badge bg-secondary">Inactiva</span>
               </td>
@@ -81,16 +84,15 @@
                   </svg>
                   Editar
                 </button>
-                <form th:action="@{/divisiones/eliminar/{id}(id=${division.id})}" method="post" class="d-inline"
-                      onsubmit="return confirm('¿Estas seguro de que deseas eliminar esta division?');">
-                  <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                    </svg>
-                    Eliminar
-                  </button>
-                </form>
+                <button type="button" class="btn btn-sm btn-danger" title="Eliminar"
+                        th:data-id="${division.id}"
+                        onclick="eliminarDivision(this)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                  </svg>
+                  Eliminar
+                </button>
               </td>
             </tr>
           </tbody>
@@ -108,7 +110,7 @@
         <h5 class="modal-title" id="modalDivisionLabel">Nueva Division</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form th:action="@{/divisiones/guardar}" method="post" id="formDivision">
+      <form id="formDivision">
         <div class="modal-body">
           <!-- ID oculto (solo para editar) -->
           <input type="hidden" name="id" id="divisionId">
@@ -163,6 +165,113 @@
 </div>
 
 <script>
+  // ==================== Utilidades ====================
+
+  /** Muestra una alerta Bootstrap en el contenedor de alertas */
+  function mostrarAlerta(mensaje, tipo) {
+    var container = document.getElementById('alertContainer');
+    var alerta = document.createElement('div');
+    alerta.className = 'alert alert-' + tipo + ' alert-dismissible fade show';
+    alerta.setAttribute('role', 'alert');
+    alerta.innerHTML = '<span>' + mensaje + '</span>' +
+      '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+    container.innerHTML = '';
+    container.appendChild(alerta);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(function() {
+      var bsAlert = bootstrap.Alert.getOrCreateInstance(alerta);
+      if (bsAlert) bsAlert.close();
+    }, 5000);
+  }
+
+  /** Elimina la fila "No hay divisiones" si existe */
+  function eliminarFilaVacia() {
+    var filaVacia = document.getElementById('filaVacia');
+    if (filaVacia) filaVacia.remove();
+  }
+
+  /** Muestra la fila "No hay divisiones" si la tabla queda vacia */
+  function verificarTablaVacia() {
+    var tbody = document.getElementById('tablaDivisiones');
+    if (tbody.children.length === 0) {
+      var tr = document.createElement('tr');
+      tr.id = 'filaVacia';
+      tr.innerHTML = '<td colspan="5" class="text-center text-muted py-4">No hay divisiones registradas.</td>';
+      tbody.appendChild(tr);
+    }
+  }
+
+  /** Crea el HTML de una fila de la tabla para una division */
+  function crearFilaDivision(div) {
+    var tr = document.createElement('tr');
+    tr.id = 'fila-' + div.id;
+    tr.innerHTML =
+      '<td class="col-id">' + div.id + '</td>' +
+      '<td class="col-cve">' + escapeHtml(div.cve) + '</td>' +
+      '<td class="col-name">' + escapeHtml(div.name) + '</td>' +
+      '<td class="col-estado">' +
+        (div.active
+          ? '<span class="badge bg-success">Activa</span>'
+          : '<span class="badge bg-secondary">Inactiva</span>') +
+      '</td>' +
+      '<td class="text-center">' +
+        '<button type="button" class="btn btn-sm btn-warning me-1" title="Editar"' +
+        ' data-bs-toggle="modal" data-bs-target="#modalDivision"' +
+        ' data-id="' + div.id + '"' +
+        ' data-cve="' + escapeAttr(div.cve) + '"' +
+        ' data-name="' + escapeAttr(div.name) + '"' +
+        ' data-active="' + div.active + '"' +
+        ' onclick="abrirModalEditar(this)">' +
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">' +
+            '<path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>' +
+          '</svg> Editar' +
+        '</button>' +
+        '<button type="button" class="btn btn-sm btn-danger" title="Eliminar"' +
+        ' data-id="' + div.id + '"' +
+        ' onclick="eliminarDivision(this)">' +
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">' +
+            '<path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>' +
+            '<path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>' +
+          '</svg> Eliminar' +
+        '</button>' +
+      '</td>';
+    return tr;
+  }
+
+  /** Actualiza una fila existente con los datos nuevos de la division */
+  function actualizarFilaDivision(fila, div) {
+    fila.querySelector('.col-id').textContent = div.id;
+    fila.querySelector('.col-cve').textContent = div.cve;
+    fila.querySelector('.col-name').textContent = div.name;
+    fila.querySelector('.col-estado').innerHTML = div.active
+      ? '<span class="badge bg-success">Activa</span>'
+      : '<span class="badge bg-secondary">Inactiva</span>';
+
+    // Update data attributes on the edit button
+    var btnEditar = fila.querySelector('.btn-warning');
+    btnEditar.setAttribute('data-id', div.id);
+    btnEditar.setAttribute('data-cve', div.cve);
+    btnEditar.setAttribute('data-name', div.name);
+    btnEditar.setAttribute('data-active', div.active);
+
+    // Update data attribute on the delete button
+    var btnEliminar = fila.querySelector('.btn-danger');
+    btnEliminar.setAttribute('data-id', div.id);
+  }
+
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(text || ''));
+    return div.innerHTML;
+  }
+
+  function escapeAttr(text) {
+    return (text || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // ==================== Modal ====================
+
   function abrirModalNueva() {
     document.getElementById('modalDivisionLabel').textContent = 'Nueva Division';
     document.getElementById('btnGuardar').textContent = 'Guardar Division';
@@ -183,23 +292,109 @@
     document.getElementById('active').checked = btn.getAttribute('data-active') === 'true';
   }
 
-  // Validacion del formulario
+  // ==================== CRUD via fetch ====================
+
+  /** Guardar (crear o actualizar) division via AJAX */
   document.getElementById('formDivision').addEventListener('submit', function(e) {
-    const cve = document.getElementById('cve').value.trim();
-    const name = document.getElementById('name').value.trim();
+    e.preventDefault();
 
+    var cve = document.getElementById('cve').value.trim();
+    var name = document.getElementById('name').value.trim();
+    var active = document.getElementById('active').checked;
+    var idField = document.getElementById('divisionId');
+    var isEdit = !idField.disabled && idField.value !== '';
+
+    // Validacion
     if (!cve) {
-      e.preventDefault();
       alert('Por favor, ingrese la clave de la division.');
-      return false;
+      return;
+    }
+    if (!name) {
+      alert('Por favor, ingrese el nombre de la division.');
+      return;
     }
 
-    if (!name) {
-      e.preventDefault();
-      alert('Por favor, ingrese el nombre de la division.');
-      return false;
+    var datos = { cve: cve, name: name, active: active };
+
+    var url, method;
+    if (isEdit) {
+      url = '/api/divisiones/' + idField.value;
+      method = 'PUT';
+    } else {
+      url = '/api/divisiones';
+      method = 'POST';
     }
+
+    // Disable submit button while processing
+    var btnGuardar = document.getElementById('btnGuardar');
+    btnGuardar.disabled = true;
+    btnGuardar.textContent = 'Guardando...';
+
+    fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
+    })
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+      if (data.success) {
+        var div = data.division;
+
+        if (isEdit) {
+          // Update existing row in the DOM
+          var fila = document.getElementById('fila-' + idField.value);
+          if (fila) {
+            actualizarFilaDivision(fila, div);
+          }
+        } else {
+          // Add new row to the table
+          eliminarFilaVacia();
+          var tbody = document.getElementById('tablaDivisiones');
+          tbody.appendChild(crearFilaDivision(div));
+        }
+
+        // Close modal
+        var modal = bootstrap.Modal.getInstance(document.getElementById('modalDivision'));
+        if (modal) modal.hide();
+
+        mostrarAlerta(data.mensaje, 'success');
+      } else {
+        mostrarAlerta(data.error, 'danger');
+      }
+    })
+    .catch(function(err) {
+      mostrarAlerta('Error de conexion: ' + err.message, 'danger');
+    })
+    .finally(function() {
+      btnGuardar.disabled = false;
+      btnGuardar.textContent = isEdit ? 'Guardar Cambios' : 'Guardar Division';
+    });
   });
+
+  /** Eliminar division via AJAX */
+  function eliminarDivision(btn) {
+    var id = btn.getAttribute('data-id');
+    if (!confirm('¿Estas seguro de que deseas eliminar esta division?')) {
+      return;
+    }
+
+    fetch('/api/divisiones/' + id, { method: 'DELETE' })
+      .then(function(resp) { return resp.json(); })
+      .then(function(data) {
+        if (data.success) {
+          // Remove row from DOM
+          var fila = document.getElementById('fila-' + id);
+          if (fila) fila.remove();
+          verificarTablaVacia();
+          mostrarAlerta(data.mensaje, 'success');
+        } else {
+          mostrarAlerta(data.error, 'danger');
+        }
+      })
+      .catch(function(err) {
+        mostrarAlerta('Error de conexion: ' + err.message, 'danger');
+      });
+  }
 </script>
 
 </body>
