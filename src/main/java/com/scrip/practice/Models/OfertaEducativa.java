@@ -64,6 +64,13 @@ public class OfertaEducativa {
     private PerfilEgreso perfil;
 
     /**
+     * Admission profile associated with this offering.
+     * The foreign key oferta_id is stored in the perfil_de_ingreso table.
+     */
+    @OneToOne(mappedBy = "ofertaEducativa")
+    private PerfilDeIngreso perfilDeIngreso;
+
+    /**
      * Convenience constructor for creating a new offering without an ID or division.
      * 
      * @param nombre   the name of the educational offering

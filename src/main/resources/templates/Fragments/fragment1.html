@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -21,13 +21,42 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/ofertas">Ofertas Educativas</a>
                 </li>
-                <li class="nav-item">
+                <!-- Menú desplegable Alumno - requiere autenticación -->
+                <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownAlumno" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Alumno
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownAlumno">
+                        <li><a class="dropdown-item" href="/alumno/admisiones">Admisiones</a></li>
+                        <li><a class="dropdown-item" href="/alumno/valores">Valores Institucionales</a></li>
+                        <li><a class="dropdown-item" href="/alumno/mapa-sitio">Mapa del Sitio</a></li>
+                    </ul>
+                </li>
+                <!-- Enlaces de administración - solo para ADMIN -->
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
                     <a class="nav-link" href="/consola/gestion_ofertas">Gestionar Ofertas</a>
                 </li>
-                <li class="nav-item">
+                <!-- Gestionar Divisiones - para ADMIN o COORDINADOR -->
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'COORDINADOR')">
                     <a class="nav-link" href="/consola/gestion_divisiones">Gestionar Divisiones</a>
                 </li>
             </ul>
+            <!-- Usuario autenticado y botón de logout -->
+            <div class="d-flex align-items-center" sec:authorize="isAuthenticated()">
+                <span class="navbar-text me-3">
+                    Hola, <span sec:authentication="name"></span>
+                    <span class="badge bg-primary ms-1" sec:authorize="hasRole('ADMIN')">Admin</span>
+                    <span class="badge bg-info ms-1" sec:authorize="hasRole('COORDINADOR') and !hasRole('ADMIN')">Coordinador</span>
+                    <span class="badge bg-secondary ms-1" sec:authorize="hasRole('USER') and !hasRole('ADMIN') and !hasRole('COORDINADOR')">Usuario</span>
+                </span>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Cerrar sesión</button>
+                </form>
+            </div>
+            <!-- Botón de Login cuando no está autenticado -->
+            <div class="d-flex align-items-center" sec:authorize="!isAuthenticated()">
+                <a href="/login" class="btn btn-outline-primary btn-sm">Iniciar sesión</a>
+            </div>
         </div>
     </div>
 </nav>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Denegado - UTEQ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .error-container {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .error-code {
+            font-size: 8rem;
+            font-weight: bold;
+            color: #dc3545;
+        }
+        .error-icon {
+            font-size: 5rem;
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+<nav th:replace="~{Fragments/fragment1 :: menu}"></nav>
+
+<div class="container error-container">
+    <div class="row">
+        <div class="col-12 text-center">
+            <div class="error-icon mb-4">
+                🚫
+            </div>
+            <h1 class="error-code">403</h1>
+            <h2 class="mb-4">Acceso Denegado</h2>
+            <p class="lead mb-4">
+                Lo sentimos, no tienes los permisos necesarios para acceder a esta página.
+            </p>
+            
+            <div class="alert alert-warning d-inline-block" role="alert">
+                <strong>Nota:</strong> Esta sección requiere privilegios de administrador.
+            </div>
+            
+            <div class="mt-4">
+                <a href="/" class="btn btn-primary me-2">
+                    <i class="bi bi-house-door"></i> Volver al Inicio
+                </a>
+                <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Regresar
+                </a>
+            </div>
+            
+            <div class="mt-5" sec:authorize="isAuthenticated()">
+                <p class="text-muted">
+                    Sesión actual: <strong sec:authentication="name"></strong>
+                    <span class="badge bg-primary ms-1" sec:authorize="hasRole('ADMIN')">Admin</span>
+                    <span class="badge bg-info ms-1" sec:authorize="hasRole('COORDINADOR') and !hasRole('ADMIN')">Coordinador</span>
+                    <span class="badge bg-secondary ms-1" sec:authorize="hasRole('USER') and !hasRole('ADMIN') and !hasRole('COORDINADOR')">Usuario</span>
+                </p>
+            </div>
+            
+            <div class="mt-3" sec:authorize="!isAuthenticated()">
+                <p class="text-muted">
+                    ¿Necesitas acceso de administrador? 
+                    <a href="/login" class="text-decoration-none">Inicia sesión aquí</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

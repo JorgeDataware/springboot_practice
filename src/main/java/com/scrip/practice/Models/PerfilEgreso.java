@@ -14,8 +14,6 @@ import java.util.UUID;
  * 
  * <p>Contains a description of the graduate profile along with two skill lists:
  * transversal (soft/general) skills and specific (technical/domain) skills.</p>
- * 
- * @see OfertaEducativa#perfil
  */
 @Data
 public class PerfilEgreso {
