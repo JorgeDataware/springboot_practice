@@ -1,3 +1,4 @@
+// WebSecurityConfig.java
 package com.scrip.practice.security;
 
 import org.springframework.context.annotation.Bean;
@@ -20,26 +21,26 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService() throws Exception {
+    public InMemoryUserDetailsManager userDetailsService() {
         InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
 
         manager.createUser(
-                User.withUsername("user")
-                .password(passwordEncoder().encode("1234"))
-                .roles("USER")
-                .build());
+                User.withUsername("usuario@ejemplo.com")
+                        .password(passwordEncoder().encode("1234"))
+                        .roles("USER")
+                        .build());
 
         manager.createUser(
-            User.withUsername("coordinador")
-                    .password(passwordEncoder().encode("coord"))
-                    .roles("USER", "COORDINADOR")
-                    .build());
+                User.withUsername("coordinador@ejemplo.com")
+                        .password(passwordEncoder().encode("coord"))
+                        .roles("USER", "COORDINADOR")
+                        .build());
 
         manager.createUser(
-            User.withUsername("admin")
-                    .password(passwordEncoder().encode("admin"))
-                    .roles("USER", "ADMIN")
-                    .build());
+                User.withUsername("2023371055@uteq.edu.mx")
+                        .password(passwordEncoder().encode("admin"))
+                        .roles("USER", "ADMIN")
+                        .build());
 
         return manager;
     }
@@ -50,20 +51,25 @@ public class WebSecurityConfig {
             .authorizeHttpRequests((requests) -> requests
                 // Ruta pública - accesible sin autenticación
                 .requestMatchers("/").permitAll()
+                // Rutas para recupetación de contraseña - accesibles sin autenticación
+                .requestMatchers("/", "/forgot-password", "/reset-password").permitAll()
+                // Rutas de login y error
+                .requestMatchers("/","/login", "/error").permitAll()
                 // Rutas exclusivas de ADMIN - gestión de ofertas
                 .requestMatchers("/consola/gestion_ofertas", "/api/ofertas", "/api/ofertas/**", "/ofertas/nueva", "/ofertas/nueva/**", "/ofertas/guardar", "/ofertas/eliminar/**").hasRole("ADMIN")
                 // Rutas de gestión de divisiones - ADMIN o COORDINADOR
                 .requestMatchers("/consola/gestion_divisiones", "/api/divisiones", "/api/divisiones/**", "/divisiones/guardar", "/divisiones/eliminar/**").hasAnyRole("ADMIN", "COORDINADOR")
                 // Rutas de alumno - requieren autenticación (USER, COORDINADOR o ADMIN)
-                .requestMatchers("/alumno/**").hasAnyRole("USER", "COORDINADOR", "ADMIN")
+                // .requestMatchers("/alumno/**").authenticated()
                 // Otras rutas requieren autenticación
-                .requestMatchers("/ofertas").authenticated()
+                .requestMatchers("/ofertas", "/alumno/**").authenticated()
                 // Cualquier otra ruta requiere autenticación
                 .anyRequest().authenticated()
             )
             .formLogin((form) -> form
-                .permitAll()
-                .defaultSuccessUrl("/", true)
+                    .loginPage("/login") // Le decimos que use nuestra propia ruta
+                    .permitAll()
+                    .defaultSuccessUrl("/", true)
             )
             .logout((logout) -> logout
                 .logoutUrl("/logout")

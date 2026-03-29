@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Enviar Correo Electrónico</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+<body>
+
+<div th:replace="~{fragments/fragment1 :: menu}"></div>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Enviar Correo</h4>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/send-email}" th:object="${emailDTO}" method="post">
+
+                        <div class="mb-3">
+                            <label for="to" class="form-label">Destinatario (Para):</label>
+                            <input type="email" class="form-control" id="to" th:field="*{to}" placeholder="ejemplo@correo.com" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">Asunto:</label>
+                            <input type="text" class="form-control" id="subject" th:field="*{subject}" placeholder="Asunto del correo" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="body" class="form-label">Mensaje:</label>
+                            <textarea class="form-control" id="body" th:field="*{body}" rows="5" placeholder="Escribe tu mensaje aquí..." required></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="/" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">
+                                Enviar Mensaje
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
