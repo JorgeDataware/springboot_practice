@@ -40,9 +40,6 @@
                 <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'COORDINADOR')">
                     <a class="nav-link" href="/consola/gestion_divisiones">Gestionar Divisiones</a>
                 </li>
-                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'COORDINADOR')">
-                    <a class="nav-link" href="/consola/gestion_divisiones">Gestionar Divisiones</a>
-                </li>
 
                 <li class="nav-item" sec:authorize="hasRole('ADMIN')">
                     <a class="nav-link text-primary fw-bold" href="/send-email/form">Enviar Correo</a>

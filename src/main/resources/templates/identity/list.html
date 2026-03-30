@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gestión de Identidad Institucional</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-light">
+
+<div th:replace="~{Fragments/fragment1 :: menu}"></div>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-person-badge"></i> Gestión de Identidad</h2>
+        <button type="button" class="btn btn-primary shadow-sm" onclick="openModal()">
+            <i class="bi bi-plus-circle"></i> Nueva Identidad
+        </button>
+    </div>
+
+    <div class="card shadow border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                <tr>
+                    <th class="ps-4">Nombre Identificador</th>
+                    <th>Estado</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="idnt : ${identidades}">
+                    <td th:text="${idnt.name}" class="fw-bold ps-4"></td>
+                    <td>
+                        <span th:if="${idnt.active}" class="badge bg-success">Activo</span>
+                        <span th:unless="${idnt.active}" class="badge bg-secondary">Inactivo</span>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <a th:if="${!idnt.active}" th:href="@{/consola/identidad/activar/{id}(id=${idnt.id})}"
+                               class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-check-lg"></i>
+                            </a>
+                            <button class="btn btn-outline-warning btn-sm" th:onclick="prepareEdit([[${idnt}]])">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <a th:href="@{/consola/identidad/eliminar/{id}(id=${idnt.id})}"
+                               class="btn btn-outline-danger btn-sm"
+                               onclick="return confirm('¿Eliminar este registro?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="identityModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form th:action="@{/consola/identidad/guardar}" th:object="${identity}" method="post" id="identityForm">
+
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="modalTitle">Nueva Identidad</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" th:field="*{id}" id="inputId">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre del Registro:</label>
+                        <input type="text" class="form-control" th:field="*{name}" id="inputName" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Misión:</label>
+                            <textarea class="form-control" th:field="*{mision}" id="inputMision" rows="3" required></textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Visión:</label>
+                            <textarea class="form-control" th:field="*{vision}" id="inputVision" rows="3" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Política de Calidad:</label>
+                        <textarea class="form-control" th:field="*{policy}" id="inputPolicy" rows="2" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Objetivos del SGE:</label>
+                        <textarea class="form-control" th:field="*{sgeObjectives}" id="inputSGE" rows="3" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Valores (separados por comas):</label>
+                        <input type="text" class="form-control" th:field="*{values}" id="inputValues" required>
+                    </div>
+
+                    <div class="form-check form-switch mt-3">
+                        <input class="form-check-input" type="checkbox" th:field="*{active}" id="inputActive">
+                        <label class="form-check-label" for="inputActive">Establecer como Identidad Activa</label>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary px-4">Guardar Registro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script th:inline="javascript">
+    // Referencia al modal de Bootstrap
+    let modalInstance = null;
+
+    function openModal() {
+        const form = document.getElementById('identityForm');
+        
+        // Limpiamos todos los campos manualmente
+        document.getElementById('inputId').value = "";
+        document.getElementById('inputName').value = "";
+        document.getElementById('inputMision').value = "";
+        document.getElementById('inputVision').value = "";
+        document.getElementById('inputPolicy').value = "";
+        document.getElementById('inputSGE').value = "";
+        document.getElementById('inputValues').value = "";
+        document.getElementById('inputActive').checked = false;
+        
+        document.getElementById('modalTitle').innerText = "Crear Nueva Identidad";
+
+        if(!modalInstance) {
+            modalInstance = new bootstrap.Modal(document.getElementById('identityModal'));
+        }
+        modalInstance.show();
+    }
+
+    function prepareEdit(identity) {
+        document.getElementById('modalTitle').innerText = "Editar: " + identity.name;
+
+        // El mapeo de campos debe ser exacto a como Lombok/Jackson mandan el JSON
+        document.getElementById('inputId').value = identity.id;
+        document.getElementById('inputName').value = identity.name;
+        document.getElementById('inputMision').value = identity.mision;
+        document.getElementById('inputVision').value = identity.vision;
+        document.getElementById('inputPolicy').value = identity.policy;
+        document.getElementById('inputSGE').value = identity.sgeObjectives;
+        document.getElementById('inputValues').value = identity.values;
+        document.getElementById('inputActive').checked = identity.active;
+
+        if(!modalInstance) {
+            modalInstance = new bootstrap.Modal(document.getElementById('identityModal'));
+        }
+        modalInstance.show();
+    }
+
+    // Agregar listener al formulario para debug
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('identityForm');
+        form.addEventListener('submit', function(e) {
+            console.log('Formulario enviándose...');
+            console.log('Action:', form.action);
+            console.log('Method:', form.method);
+            
+            // Log de todos los campos
+            const formData = new FormData(form);
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ':', value);
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
