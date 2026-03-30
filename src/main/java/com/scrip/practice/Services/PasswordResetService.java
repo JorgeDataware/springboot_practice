@@ -43,7 +43,7 @@ public class PasswordResetService {
                 dto.setTo(email);
                 dto.setSubject("Restablece tu contraseña");
 
-                // Aquí armamos el enlace. Ojo: ajusta el puerto si no usas el 8080
+                // se arma el enlace para enviar por correo
                 String enlace = "http://localhost:8080/reset-password?token=" + token;
                 dto.setBody("Para restablecer tu contraseña, haz clic en el siguiente enlace: " + enlace);
 
